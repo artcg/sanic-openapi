@@ -134,6 +134,22 @@ def build_spec(app, loop):
             api_produces_content_types = getattr(app.config, "API_PRODUCES_CONTENT_TYPES", ["application/json"])
             produces_content_types = route_spec.produces_content_type or api_produces_content_types
 
+            if _handler not in route_spec:
+                # only parse docstring for routes that DONT use a
+                # manual doc.consumes decorator
+
+                # print('{}: {}... {}, {}'.format(_method, _handler, _handler.__name__, _handler.__module__))
+                # print(hasattr(_handler, "view_class"))
+                # import pdb; pdb.set_trace()
+                from .autodoc import YamlStyleParametersParser
+                import inspect
+                y = YamlStyleParametersParser(inspect.getdoc(_handler))
+                endpoint = y.to_openAPI_2()
+                endpoint.setdefault("operationId", route.name)
+                if endpoint is not None:
+                    methods[_method.lower() + '_auto'] = endpoint
+                    continue
+
             # Parameters - Path & Query String
             route_parameters = []
             for parameter in route.parameters:

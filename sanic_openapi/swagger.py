@@ -65,8 +65,6 @@ def remove_nulls(dictionary, deep=True):
 
 @swagger_blueprint.listener("after_server_start")
 def build_spec(app, loop):
-    _spec = Spec(app=app)
-
     # --------------------------------------------------------------- #
     # Blueprint Tags
     # --------------------------------------------------------------- #
@@ -123,10 +121,9 @@ def build_spec(app, loop):
         methods = {}
         for _method, _handler in method_handlers:
             if hasattr(_handler, "view_class"):
-                view_handler = getattr(_handler.view_class, _method.lower())
-                route_spec = route_specs.get(view_handler) or RouteSpec()
-            else:
-                route_spec = route_specs.get(_handler) or RouteSpec()
+                _handler = getattr(_handler.view_class, _method.lower())
+
+            route_spec = route_specs.get(_handler) or RouteSpec()
 
             if _method == "OPTIONS" or route_spec.exclude:
                 continue
@@ -215,7 +212,9 @@ def build_spec(app, loop):
     # Definitions
     # --------------------------------------------------------------- #
 
+    _spec = Spec(app=app)
     _spec.add_definitions(definitions={obj.object_name: definition for obj, definition in definitions.values()})
+
 
     # --------------------------------------------------------------- #
     # Tags
